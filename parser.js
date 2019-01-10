@@ -50,6 +50,9 @@ var safeParse = function(cats, text, areaNum) {
     }
 }
 
+//ca, qui ne laisse pas avoir de la recursion, que est complique, etc, ou juste au fur et a mesure matcher les trucs et avoir un array des cat qui ont ete choisies? mais ne permet pas d'effacer plus que le dernier truc pas encore complete...
+
+
 var indexArray = null; // initialise plus bas
 var abstractFinder = new RegExp("┫(.*?)┣");
 var parse = function(cats, text, areaNum) {
