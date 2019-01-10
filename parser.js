@@ -27,36 +27,7 @@ var closestMatch = function() {
 
 }
 
-var seek = function(word, in) {
 
-}
-
-var parseIt = function(category, word) {  //retourne category courante (premiere sans <>)
-    var nextCat = "";
-
-    if(typeof category == "string") {       //traite apres ce grand if
-
-
-    }
-
-    if(typeof category == "object") {   //json
-        if(category.hasOwnProperty("word")) {
-            return category[word];
-        } else {
-            for(var k in category) {
-
-            }
-
-
-        }
-    }
-
-    if(word == category.split(" ")[0])
-
-
-}
-
-//https://stackoverflow.com/questions/5613834/convert-string-to-variable-name-in-javascript
 
 var specialParse = function(type, word) {
     switch (type) {
@@ -71,44 +42,57 @@ var incrementIndexArray = function(areaNum) {
     indexArray[areaNum]++;
 }
 
+var safeParse = function(cats, text, areaNum) {
+    try{
+        return parse(cats, text, areaNum);
+    }catch(e) {
+        return ""
+    }
+}
+
 var indexArray = null; // initialise plus bas
 var abstractFinder = new RegExp("┫(.*?)┣");
 var parse = function(cats, text, areaNum) {
+    endCats = ""
+
     cats = cats.split(" "); // forme "┫paren_expr┣ ┫stat┣"
 
     for(cat in cats) {
         save = indexArray[areaNum];
 
-        if(cat == text[parseIndex]) {
+        if(cat == text[indexArray[areaNum]]) {
             incrementIndexArray(areaNum);
-            return;
+            endCats += cat;
         } else if(abstractFinder.test(cat)) {
-            var catvar = window[cat];
+            var catvar = window[cat];   //https://stackoverflow.com/questions/5613834/convert-string-to-variable-name-in-javascript
 
             if(typeof catvar == "string") {       //traite apres ce grand if
-                parse(catvar, text, areaNum);
+                endCats += safeParse(catvar, text, areaNum);
 
             } else if(typeof catvar == "object") {   //json
-                if(catvar.hasOwnProperty("word")) {
+                if(catvar.hasOwnProperty(text[indexArray[areaNum]])) {
                     incrementIndexArray(areaNum);
-                    parse(catvar[word], text, areaNum);
+                    endCats += text[indexArray[areaNum]]
+
+                    endCats += safeParse(catvar[text[indexArray[areaNum]]], text, areaNum);
                 } else {
                     for(var key in catvar) {
                         if(abstractFinder.test(key)) {
-                            parse(key, text, areaNum);
-                            parse(catvar[key], text, areaNum);
+                            endCats += safeParse(key, text, areaNum);
+                            endCats += safeParse(catvar[key], text, areaNum);
                         }
                     }
                 }
 
             } else if(Array.isArray(catvar)) {
                 for(subcat in catvar) {
-                    parse(subcat, key, areaNum);
+                    endCats += safeParse(subcat, key, areaNum);
                 }
             }
 
         } else if (cat[0] == '┅') {
             if(specialParse(cat.substring(1), word)) {
+                endCats += cat.substring(1);
                 incrementIndexArray(areaNum);
             }
         }
