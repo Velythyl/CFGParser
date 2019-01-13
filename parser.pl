@@ -1,23 +1,28 @@
 start(L1, Sugg) :- stat(L1, [], Subsugg), flatten(Subsugg, Sugg).
 
-stat([], Reste, Sugg) :- stat_words(W), stat([W], Reste, Sugg1), append([W], Sugg1, Sugg).
+stat([], Reste, Sugg) :- words("stat", W), stat([W], Reste, Sugg1), append([W], Sugg1, Sugg).
 stat(["if"|L], Reste, Sugg) :- paren_expr(L, R1, Sugg1), paren_expr(R1, R2, Sugg2), Reste=R2, append_all([Sugg1, Sugg2], Sugg).
 stat(["if"|L], Reste, Sugg) :- paren_expr(L, R1, Sugg1), paren_expr(R1, R2, Sugg2), else(R2, R3, Sugg3), Reste=R3, append_all([Sugg1, Sugg2, Sugg3], Sugg).
+stat([X|[]], Reste, Sugg) :- complete("stat", X, W), stat([W], Reste, Sugg1), append([W], Sugg1, Sugg).
 
-else([], Reste, Sugg) :- else_words(W), else([W], Reste, Sugg1), append([W], Sugg1, Sugg).
+else([], Reste, Sugg) :- words("else", W), else([W], Reste, Sugg1), append([W], Sugg1, Sugg).
 else(["else"|L], Reste, Sugg) :- paren_expr(L, Reste, Sugg).
+else([X|[]], Reste, Sugg) :- complete("else", X, W), else([W], Reste, Sugg1), append([W], Sugg1, Sugg).
 
-paren_expr([], Reste, Sugg) :- paren_expr_words(W), paren_expr([W], Reste, Sugg2), append_all([W, Sugg2], Sugg). 
-paren_expr([X|L], Reste, Sugg) :- paren_expr_words(X), Reste=L, Sugg=[].
+paren_expr([], Reste, Sugg) :- words("paren_expr", W), paren_expr([W], Reste, Sugg1), append_all([W, Sugg1], Sugg). 
+paren_expr([X|L], Reste, Sugg) :- words("paren_expr", X), Reste=L, Sugg=[].
+paren_expr([X|[]], Reste, Sugg) :- complete("paren_expr", X, W), paren_expr([W], Reste, Sugg1), append([W], Sugg1, Sugg).
 
 append_all([[Lone]], [Lone]) :- !.	% Liste imbriquée
 append_all([Lone], [Lone]) :- !.	% Item seul
 append_all([[Subl]|List], Sum) :- append_all(List, Subsum), append([Subl], Subsum, Sum), !.	% Liste imbriquée
 append_all([Ele|List], Sum) :- append_all(List, Subsum), append([Ele], Subsum, Sum), !.		% Item seul
        
-stat_words(W) :- member(W, ["if"]).	% Ne pas mettre les cas recursif dans ces listes
-paren_expr_words(W) :- member(W, ["paren", "temp", "foo"]).
-else_words(W) :- member(W, ["else"]).
+complete(Type, Deb, W) :- not(words(Type, Deb)), words(Type, Mot), string_length(Deb, Len), sub_string(Mot, Len, _, 0, Apr), string_concat(Deb, Apr, Mot), W=Mot, !.
+
+words("stat", W) :- member(W, ["if"]).	% Ne pas mettre les cas recursif dans ces listes
+words("paren_expr", W) :- member(W, ["paren", "temp", "foo"]).
+words("else", W) :- member(W, ["else"]).
 
 %start(["if", "paren", "paren", "else"], Sugg).
 %
@@ -37,5 +42,6 @@ else_words(W) :- member(W, ["else"]).
 %Le cas non-vide peut avoir deux formes: 
 %	Soit X est un littéral placé dans la tête de la déclaration du type, comme type(["mot"|L], Reste, Sugg). Ceci ne laisse place qu'à une seule option au début du type.
 %	Soit X est vérifié dans le corps de la déclaration par un appel à type_words(X). Ceci laisse place à plusieurs options en début de type.
+%Le cas non-vide, mais qui ne "marche pas":
+%	On a un seul element dans la liste, mais il n'est pas un des mots du type. Alors, on essaie de le completer et on appelle le type sur le mot complete.
 %	
-%	On pourrait traiter le premier cas avec la méthode du deuxième, mais cette façon de faire évite des appels de fonctions et rend la lecture humaine plus rapide.
