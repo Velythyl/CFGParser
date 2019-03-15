@@ -1,5 +1,9 @@
 # Parser
 
+Génère des suggestions pour une grammaire hors contexte (cas non-récursifs) et valide des mots (tous les cas).
+
+TODO:
+
 http://tau-prolog.org/examples/likes
 
 program(L1, Sugg) :- stat(L1, [], Sugg).
